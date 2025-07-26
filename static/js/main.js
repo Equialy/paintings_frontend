@@ -40,12 +40,6 @@ function checkAuth() {
     }
 }
 
-function buttonLogout() {
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (currentUser) {
-        logoutBtn.onclick = logout;
-    }
-}
 
 // Изменение кнопок Войти и Выйти
 function updateAuthUI() {
@@ -566,7 +560,7 @@ function closeOrderModal() {
 }
 
 // Обработчик формы заказа
-document.getElementById('orderForm').addEventListener('submit', function (e) {
+document.getElementById('orderForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const address = document.getElementById('address').value;
@@ -592,46 +586,42 @@ document.getElementById('orderForm').addEventListener('submit', function (e) {
 
     // Отправляем запрос на создание заказа
     // Отправляем запрос на создание заказа
-    fetch(`${API_BASE}/orders`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify(orderData)
-    })
-        .then(async response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                // Пытаемся получить сообщение об ошибке из ответа сервера
-                let errorMessage = 'Ошибка оформления заказа';
-                try {
-                    const errorData = await response.json();
-                    if (errorData.detail) {
-                        // Если сервер вернул детализированное сообщение
-                        errorMessage = errorData.detail;
-                    } else if (errorData.err) {
-                        // Если сервер вернул сообщение в поле 'err'
-                        errorMessage = errorData.err;
-                    }
-                } catch (e) {
-                    // Не удалось распарсить JSON, используем стандартное сообщение
-                }
-                throw new Error(errorMessage);
-            }
+    try {
+        const response = await fetch(`${API_BASE}/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(orderData)
         })
-        .then(data => {
-            showMessage('Заказ успешно оформлен!', 'success');
-            clearCart();
-            closeOrderModal();
-            closeCart();
-        })
-        .catch(error => {
-            showMessage(error.detail, 'error');
-            submitBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить заказ';
-            submitBtn.disabled = false;
-        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            let errorMessage = 'Ошибка оформления заказа';
+            if (data.detail) errorMessage = data.detail;
+            else if (data.detail) errorMessage = data.detail;
+            throw new Error(errorMessage);
+        }
+        showMessage('Заказ успешно оформлен!', 'success');
+        clearCart();
+        closeOrderModal();
+        closeCart();
+        // Перенаправляем на оплату
+        const paymentUrl = data.payment_url || data.paymentUrl;
+        if (!paymentUrl) throw new Error('Сервер не вернул URL для оплаты');
+
+        window.location.href = paymentUrl;
+    } catch (error) {
+        console.error('Ошибка оформления заказа:', error);
+        showMessage(error.message || 'Произошла ошибка', 'error');
+    } finally {
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить заказ';
+        submitBtn.disabled = false;
+    }
+
+
+
 });
 
 function clearCart() {
