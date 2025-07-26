@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Художественная Галерея</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="images/icons8-picture.svg" type="image/x-icon">
+  <!-- Apple Touch Icon для iOS‑устройств (при добавлении сайта на главный экран) -->
+  <link rel="apple-touch-icon" href="images/icons8-picture.svg" sizes="180x180">
+
+  <link rel="stylesheet" href="static/css/style.css">
+
+</head>
+<body>
+<header class="header">
+  <div class="container">
+    <div class="header-content">
+      <a href="#" class="logo">
+        <i class="fas fa-palette"></i>
+        Художественная Галерея
+      </a>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="loadCart();openCart()">
+          <i class="fas fa-shopping-cart"></i>
+          Корзина
+          <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+        <button class="btn btn-primary" id="authBtn" onclick="openAuthModal()">
+          <i class="fas fa-user"></i>
+          Войти
+        </button>
+        <button class="btn btn-primary" id="logoutBtn" style="display: none;">
+          <i class="fas fa-user"></i>
+          Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="messageContainer" class="hidden"></div>
+
+<div class="modal" id="authModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeAuthModal()">×</span>
+    <div class="modal-header">
+      <h2 id="authTitle">Вход</h2>
+      <p>Добро пожаловать в нашу галерею</p>
+    </div>
+    <form id="authForm">
+      <div class="form-group" id="usernameGroup">
+        <label for="username">Email пользователя</label>
+        <input type="text" class="form-control" id="username" required>
+      </div>
+      <div class="form-group" id="emailGroup" style="display: none;">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input type="password" class="form-control" id="password" required>
+      </div>
+      <div class="form-group" id="password2Group" style="display: none;">
+        <label for="password2">Повторите пароль</label>
+        <input type="password" class="form-control" id="password2">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+        <span id="authSubmitText">Войти</span>
+      </button>
+      <a onclick="loginWithGoogle()"> <img src="images/icons8-google-96.svg" style="width: 40px; height: 40px; cursor: pointer;" alt="Google"></a>
+      <p style="text-align: center;">
+        <span id="authSwitchText">Нет аккаунта?</span>
+        <a href="#" id="authSwitch" onclick="toggleAuthMode()" style="color: #667eea;">Зарегистрироваться</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="pictureModal">
+  <div class="modal-content">
+    <span class="close" onclick="closePictureModal()">×</span>
+    <div class="modal-header">
+      <h2 id="pictureTitle"></h2>
+    </div>
+    <div id="pictureDetails">
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+  <div class="container">
+    <section class="hero">
+      <h1>Коллекция Искусства</h1>
+      <p>Откройте для себя уникальные произведения искусства от талантливых художников</p>
+    </section>
+
+    <section class="filters">
+      <div class="filter-group">
+        <label>Сортировка</label>
+        <select class="filter-select" id="sortBy">
+          <option value="title">По названию</option>
+          <option value="price">По цене</option>
+          <option value="author">По автору</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Порядок</label>
+        <select class="filter-select" id="order">
+          <option value="asc">По возрастанию</option>
+          <option value="desc">По убыванию</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>На странице</label>
+        <select class="filter-select" id="limit">
+          <option value="6">6</option>
+          <option value="9">9</option>
+          <option value="12">12</option>
+          <option value="15">15</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="loadPictures()">
+        <i class="fas fa-search"></i>
+        Применить
+      </button>
+    </section>
+
+    <div class="loading hidden" id="loading">
+      <div class="spinner"></div>
+      <p>Загрузка произведений искусства...</p>
+    </div>
+
+    <section class="pictures-grid" id="picturesGrid">
+    </section>
+
+    <div style="text-align: center; margin: 2rem 0;">
+      <button class="btn btn-primary" id="loadMoreBtn" onclick="loadMorePictures()" style="display: none;">
+        <i class="fas fa-plus"></i>
+        Загрузить еще
+      </button>
+    </div>
+  </div>
+</main>
+
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3>Корзина</h3>
+    <button class="btn btn-secondary" onclick="closeCart()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="cart-content" id="cartContent">
+    <p style="text-align: center; color: #999; padding: 2rem;">Корзина пуста</p>
+  </div>
+  <div class="cart-total" id="cartTotal" style="display: none;">
+    <div class="total-amount" id="totalAmount">0 ₽</div>
+    <button class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="openOrderModal()">
+      <i class="fas fa-credit-card"></i>
+      Оформить заказ
+    </button>
+    <button class="btn btn-secondary" style="width: 100%;" onclick="clearCart()">
+      <i class="fas fa-trash"></i>
+      Очистить корзину
+    </button>
+  </div>
+</div>
+
+<div class="modal" id="orderModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeOrderModal()">×</span>
+    <div class="modal-header">
+      <h2>Оформление заказа</h2>
+      <p>Пожалуйста, заполните данные для доставки</p>
+    </div>
+    <form id="orderForm">
+      <div class="form-group">
+        <label for="address">Адрес доставки</label>
+        <input type="text" class="form-control" id="address" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input type="tel" class="form-control" id="phone" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        <i class="fas fa-check"></i>
+        Подтвердить заказ
+      </button>
+    </form>
+  </div>
+</div>
+<script src="static/js/script.js"></script>
+<script src="static/js/main.js"></script>
+
+</body>
+</html>

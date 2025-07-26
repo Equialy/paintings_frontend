@@ -1,0 +1,14 @@
+{
+  "name": "art-store-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "static/js/script.js",
+  "scripts": {
+    "dev": "http-server -p 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
